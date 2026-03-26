@@ -1,0 +1,15 @@
+.env
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+data/
+data/talent/
+data/.DS_Store
+frontend/node_modules/
+frontend/dist/
+out.txt
+err.txt
+logs/
+*.log
+.DS_Store
