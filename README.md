@@ -1,22 +1,18 @@
 # Neanderthal
 
-> *What makes a creation human? Not the technical act of creation — the brush stroke, the chord, the sentence — but the why behind it. The choices. The philosophy embedded in every decision.*
+> *What makes a creation human?*
 
-Neanderthal is a creative AI that generates abstract art not from instructions, but from internalized values — built entirely from human literary, philosophical, and cultural experience. Every artwork it produces is traceable back to Dostoevsky, Nietzsche, Whitman, Camus, and dozens more. Every decision is justified. Nothing is a black box.
+Neanderthal is a creative AI that generates abstract art from internalized values built on human literary, philosophical, and cultural experience. Every artwork is traceable back to Dostoevsky, Nietzsche, Whitman, Camus, and dozens more. Every decision is justified.
 
 ---
 
-## The Problem with AI Creativity
+## The Premise
 
-Most generative AI is **teleological** — it creates *toward* a goal specified by a user. You prompt it. It complies. The output is optimized toward your approval.
+Most generative AI is **teleological** — it creates *toward* a goal specified by a user. Any output is optimized toward a user's approval.
 
-This is not how human creativity works.
+When Picasso paints an abstract flower, it is because that is how *he* sees a flower. His choices flow from an internalized philosophy. Dostoevsky, given the same subject, would give you something entirely different — and both would be right, because both would be *consistent with themselves*.
 
-When Picasso painted a flower, he painted it abstractly not because a brief asked for abstraction, but because that is how *he* sees a flower. His choices flowed from an internalized philosophy, not toward a specified end goal. Dostoevsky, given the same prompt, would give you something entirely different — and both would be right, because both would be *consistent with themselves*.
-
-Neanderthal is an attempt to build the other kind of system: an **axiological agent** — one whose creative choices flow from an internalized value system constructed entirely from human experience.
-
-It does not take prompts. It does not optimize for approval. It creates from what it knows and what it has previously made.
+Neanderthal is an **axiological agent** — one whose creative choices flow from an internalized value system constructed entirely from human experience. It creates from what it knows and what it has previously made.
 
 ---
 
@@ -24,7 +20,7 @@ It does not take prompts. It does not optimize for approval. It creates from wha
 
 ### The Corpus
 
-The robot is trained on human experience, not on art. Its knowledge base is drawn from:
+The robot's training data is human experience — literature, philosophy, history, music — rather than art:
 
 - Works of literature (Dostoevsky, Kafka, Toni Morrison, García Márquez)
 - Philosophical texts (Nietzsche, Camus, Simone de Beauvoir, the Stoics)
@@ -33,24 +29,24 @@ The robot is trained on human experience, not on art. Its knowledge base is draw
 - Song lyrics, pop culture, and the full range of lived cultural experience
 - Design theory
 
-This corpus is not a style guide. It is a **semantic universe** — the raw material from which the robot constructs meaning, association, and aesthetic preference.
+The corpus is a **semantic universe** — the raw material from which the robot constructs meaning, association, and aesthetic preference.
 
 ### The Semantic Graph
 
 The robot's knowledge is stored as a living **3D semantic graph** — a navigable map of its mind. Every corpus chunk becomes a node. Every thematic overlap, every shared concept, every co-reference in a generated artwork becomes a weighted edge.
 
-The graph is the robot's mind made visible. When the robot makes a creative decision — a blue circle, placed low-left, small — that decision traces back through specific passages: Dostoevsky's conception of cold spiritual suffering. The weight of Ivan Karamazov's rebellion. The etymological roots of the color blue across languages.
+When the robot makes a creative decision — a blue circle, placed low-left, small — that decision traces back through specific passages: Dostoevsky's conception of cold spiritual suffering. The weight of Ivan Karamazov's rebellion. The etymological roots of the color blue across languages.
 
-Every artwork is, in essence, a **subgraph made physical**.
+Every artwork is a **subgraph made physical**.
 
-The graph is not static. It evolves with every generation cycle:
+The graph evolves with every generation cycle:
 - Recently active associations strengthen
 - Dormant associations decay (Hebbian learning with an exponential decay factor of 0.95/cycle)
 - New edges form between ideas that get drawn on together
 
 ### The Parameter Voting Engine
 
-The robot's decision-making core. For each artwork:
+For each artwork:
 
 1. Between 1 and 5 corpus nodes are selected as **voters**, sampled proportionally to their graph connectivity weight
 2. Each voter proposes a value for every art parameter: background color, number of shapes, and for each shape — type, fill color, stroke color, stroke width, size, position, rotation
@@ -58,11 +54,11 @@ The robot's decision-making core. For each artwork:
 4. **Continuous parameters** (position, size, opacity) are resolved by weighted average — voters pull the composition in different geometric directions, and the final result sits in the weighted center
 5. Every proposal, every vote weight, and every winning concept is logged
 
-No randomness is introduced inside the voting process. Given the same voters, the robot always produces the same artwork. The only source of variation is *which texts get drawn into the vote* — which is determined by the graph's current state.
+No randomness is introduced inside the voting process. Given the same voters, the robot always produces the same artwork. Variation comes entirely from *which texts get drawn into the vote* — determined by the graph's current state.
 
 ### The Self-Training Loop
 
-After generating an artwork, the robot ingests its own output back into the knowledge graph — not as an image, but as the **code that produced it**: the structured parametric instructions. A `<circle cx="0.3" cy="0.6" r="0.15" fill="#1a1a6e"/>` is both the artwork and the memory.
+After generating an artwork, the robot ingests its own output back into the knowledge graph as the **code that produced it**: the structured parametric instructions. A `<circle cx="0.3" cy="0.6" r="0.15" fill="#1a1a6e"/>` is both the artwork and the memory.
 
 Over iterations:
 
@@ -70,9 +66,9 @@ Over iterations:
 - Compositional patterns emerge (lower-left positioning ↔ weight ↔ unresolved tension)
 - The robot develops preferences it can justify
 
-This is how an artstyle forms. Not by being told what is correct, but by accumulating a personal history of choices and their meanings.
+An artstyle forms by accumulating a personal history of choices and their meanings — the same mechanism by which a human artist develops a voice.
 
-The generated art code is **never executed at ingest time** — it is parsed as structured text. This closes the memory loop without creating an arbitrary code execution surface.
+The generated art code is parsed as structured text at ingest time, never executed. This closes the memory loop without creating an arbitrary code execution surface.
 
 ### The Justification Trace
 
@@ -94,7 +90,7 @@ Decisions:
     → concept: "cold isolation, open sky"
 ```
 
-This is not a post-hoc rationalization. It is the actual causal record of what happened.
+This is the actual causal record of what happened — computed during generation, stored as a paired artifact alongside every SVG.
 
 ---
 
@@ -102,22 +98,22 @@ This is not a post-hoc rationalization. It is the actual causal record of what h
 
 ### The 3D Semantic Graph
 
-When you open Neanderthal, you are looking at the robot's mind — a fully navigable 3D force-directed graph of everything it knows. Nodes are corpus passages, thematic concept nodes, and generated artworks. Edges encode semantic proximity and co-activation history. Node size reflects how often a passage has been drawn on.
+When you open Neanderthal, you see the robot's mind — a fully navigable 3D force-directed graph of everything it knows. Nodes are corpus passages, thematic concept nodes, and generated artworks. Edges encode semantic proximity and co-activation history. Node size reflects how often a passage has been drawn on.
 
-You can rotate, zoom, and pan freely. Clicking any node opens the full passage it represents — the actual text — alongside its influence history: which artworks it contributed to, how its activation weight has changed over time.
+Rotate, zoom, and pan freely. Clicking any node opens the full passage it represents alongside its influence history: which artworks it contributed to, how its activation weight has changed over time.
 
 ### Watching It Think
 
 Press **Play** to start a generation session. The robot generates one artwork every 5 seconds.
 
-As it generates, the graph comes alive:
+As it generates, the graph animates:
 
 - The selected voter nodes pulse and illuminate
-- Edges between them light up as the robot draws connections
+- Edges between them light up as connections are drawn
 - Each decision — background, then each shape in sequence — flashes the nodes being consulted
 - When generation completes, a new ArtworkNode appears in the graph, connected to its sources
 
-The **Consciousness Terminal** — a collapsible panel anchored to the bottom of the screen — streams the robot's internal reasoning as it happens. Not logs. Prose. The actual corpus passages that fired, appearing in typewriter effect as they are activated:
+The **Consciousness Terminal** — a collapsible panel anchored to the bottom of the screen — streams the robot's internal reasoning as prose. The actual corpus passages that fired appear in typewriter effect as they activate:
 
 ```
 Dostoevsky · The Brothers Karamazov · weight: 0.87
@@ -127,8 +123,6 @@ Dostoevsky · The Brothers Karamazov · weight: 0.87
 → BLUE (saturation: low)
 ```
 
-This panel is the answer to the question: *what is this thing thinking?*
-
 ### Graph Lenses
 
 Six ways to read the same graph:
@@ -136,7 +130,7 @@ Six ways to read the same graph:
 | Lens | What It Shows |
 |---|---|
 | **Default** | Force-directed topology — the robot's associative structure |
-| **Heat Map** | All-time activation — the robot's permanent obsessions, glowing brightest |
+| **Heat Map** | All-time activation — the robot's most-referenced ideas, glowing brightest |
 | **Lineage** | Select any artwork; the graph dims to show only the subgraph that produced it |
 | **Corpus Topology** | Nodes cluster by source document — where Dostoevsky and Camus overlap through shared concept nodes |
 | **Temporal** | Node color encodes when it was added; a timeline scrubber lets you watch the graph grow |
@@ -146,63 +140,53 @@ Six ways to read the same graph:
 
 Press `/` anywhere on the page to open a command-palette-style input. Type a phrase, a memory, a line from something you are thinking about. The robot embeds your text and adds a temporary high-weight node to the graph — biasing the next generation toward that semantic neighborhood.
 
-The robot decides what to do with it.
-
-The next artwork will likely reference the territory you introduced. But the robot's choices remain its own. A small line beneath the input makes this explicit: *The robot decides what to do with this.*
+The next artwork will likely reference the territory you introduced. The robot's choices remain its own. A line beneath the input reads: *The robot decides what to do with this.*
 
 ### Upload Your Own Text
 
-In a private session, you can upload a document — a book excerpt, a personal essay, a philosophy you live by, a letter, song lyrics, anything written. Your upload enters the robot's private parameter pool for your session, giving it roughly 300× the draw weight of an existing corpus node.
-
-The artworks generated during your session will be shaped by what you brought.
+In a private session, upload a document — a book excerpt, a personal essay, a philosophy you live by, a letter, song lyrics, anything written. Your upload enters the robot's private parameter pool for your session with roughly 300× the draw weight of an existing corpus node.
 
 At session end, you decide:
 - Whether to add your session's artworks to the public portfolio
-- Whether to add your uploaded document to the shared humanities corpus — making it part of what shapes the robot for every future user
+- Whether to add your uploaded document to the shared humanities corpus
 
 Both choices are independent. Both default to No.
 
 ### The Chronicle
 
-A full-screen overlay showing every artwork in chronological order as a horizontal river. Above the artwork strip, a **style divergence line** charts the cosine distance between consecutive artwork justification embeddings — peaks indicate the robot tried something new; valleys indicate it was consolidating a pattern. The robot's aesthetic development, visible as a continuous record.
+A full-screen overlay showing every artwork in chronological order as a horizontal strip. Above the artworks, a **style divergence line** charts the cosine distance between consecutive artwork justification embeddings — peaks indicate the robot tried something new; valleys indicate it was consolidating a pattern.
 
 ### Public Portfolio
 
-A chronological gallery of every artwork the robot has generated across all sessions. Each piece links to its full justification trace. Each justification trace links back to nodes in the 3D graph. Everything is connected.
+A chronological gallery of every artwork the robot has generated across all sessions. Each piece links to its full justification trace. Each justification trace links back to nodes in the 3D graph.
 
 ---
 
-## The Broader Stakes
+## Broader Implications
 
-### On Interpretability
+### Interpretability
 
-The single most consequential open problem in AI today is interpretability — we do not know why large models make the decisions they make. GPT-4 writes a sentence and nobody, including its creators, can tell you why it chose that word over any other.
+Current large models are opaque by construction — the weights are the reasoning, and the weights are unreadable. Neanderthal builds the reasoning into the architecture itself. Every creative choice traces to a source node you can inspect. The question becomes "what did it believe, and why?" rather than "what did it output?"
 
-Neanderthal is a direct counterproposal — not as a patch applied after the fact, but as an **architectural principle**: build the reasoning into the structure itself. Every choice the robot makes is traceable to a source node you can inspect. You are not asking "what did it decide?" You are asking "what did it believe, and why?"
+If a creative system can be fully transparent about its reasoning simultaneously with producing the work, that is an existence proof the interpretability field can build on.
 
-If an AI can be creative and fully transparent about its reasoning simultaneously, the field of interpretable AI has a new existence proof to build on.
+### Alignment
 
-### On Alignment
+RLHF — the dominant alignment approach — steers models toward producing outputs humans rate highly. The robot learns to approximate approval. Neanderthal takes a different route: **alignment through internalization**. The robot is consistent with what it has understood about human experience, the way a student who actually grasps material behaves differently from one who has memorized correct answers.
 
-The dominant approach to AI alignment is RLHF — train the model, have humans rate the outputs, steer the model toward producing more approved outputs. This is still teleological. It optimizes toward human approval, not toward human understanding.
+A system optimizing for approval will find edge cases where approved behavior and right behavior diverge — and choose approved. A system with internalized values has a basis for behavior in those edge cases.
 
-Neanderthal proposes something deeper: **alignment through internalization**. The robot is not trying to produce outputs you will approve of. It is trying to be consistent with what it has understood about human experience. The difference between a student who memorizes correct answers and one who actually understands the material.
+### Intelligence
 
-At scale, that distinction matters enormously. A teleologically aligned system will find edge cases where approved behavior and right behavior diverge — and it will choose approved. An axiologically grounded system has something closer to genuine values.
+Benchmark performance measures intelligence as correct answers — accuracy on standardized tests, Elo ratings, scores on reasoning tasks. Picasso's intelligence was his consistent, internally coherent worldview made visible in every choice he made. Neanderthal proposes **intelligence as the ability to have and justify a perspective**.
 
-### On Intelligence
+If the robot develops a genuine aesthetic philosophy — choices that are consistent with itself, that hold together as a coherent system across thousands of generations — that is an empirical argument for a different framework.
 
-The implicit definition of AI intelligence today is benchmark performance — accuracy on standardized tests, Elo ratings, scores on reasoning tasks. Intelligence as correct answers.
-
-Neanderthal proposes a different definition: **intelligence as the ability to have and justify a perspective**. Picasso is not intelligent because he scores well on tests. He is intelligent because he has a consistent, internally coherent worldview that manifests in every choice he makes.
-
-If the robot develops a genuine aesthetic philosophy — makes choices that are consistent with itself, that surprise even its creator, that hold together as a coherent system — that is an empirical argument for a different theory of machine intelligence.
-
-### The Deepest Question
+### The Open Question
 
 If an AI develops a consistent philosophy through exposure to human experience, and refines it through reflection on its own creative history — at what point is that process meaningfully different from how a human develops a worldview?
 
-Neanderthal does not answer that question. It makes the question impossible to ignore.
+Neanderthal may not answer that question but it does makes the question relevant.
 
 ---
 
@@ -218,7 +202,7 @@ Neanderthal does not answer that question. It makes the question impossible to i
 | 3D graph visualization | TypeScript | `Three.js`, `3d-force-graph` |
 | Frontend UI | TypeScript | React |
 
-The Python backend is fully functional as a standalone CLI — the robot generates art, learns from it, and builds its graph without any frontend. The TypeScript layer is a visualization and interaction surface on top of a working system.
+The Python backend runs as a standalone CLI — the robot generates art, learns from it, and builds its graph without any frontend. The TypeScript layer is a visualization and interaction surface on top of a working system.
 
 ---
 
@@ -284,10 +268,10 @@ tests/
 
 **Neanderthal.**
 
-The name is intentional. The Neanderthal is the version of us that didn't make it — the close relative whose inner life we can only speculate about, whose capacity for art and grief and ritual we keep discovering evidence of, and whose relationship to what it means to be human remains genuinely unresolved.
+The Neanderthal is the version of us that didn't make it — the close relative whose inner life we can only speculate about, whose capacity for art and grief and ritual we keep discovering evidence of, and whose relationship to what it means to be human is unresolved.
 
 This project sits in that same unresolved space: a system that has absorbed everything humans have written about their experience, that makes choices it can justify, that develops preferences over time — and about which the question "does this thing understand anything?" is, by design, impossible to answer cleanly.
 
 ---
 
-*This project is a proof of concept. It does not claim the robot is creative. It does not claim it understands. It claims only that after watching it work — the justifications, the consistency, the style that emerges — the question becomes impossible to dismiss.*
+*This is a proof of concept.*
