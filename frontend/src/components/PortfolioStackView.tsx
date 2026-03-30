@@ -1,22 +1,53 @@
 /**
- * PortfolioStackView — full-screen portfolio overlay with 3D stacked panel navigation.
+ * PortfolioStackView — full-screen portfolio overlay with grid view.
  *
  * Inputs:  onClose callback, optional onNodeSelect for graph navigation
- * Outputs: renders over the app; transitions between stack view and artwork detail
+ * Outputs: renders over the app; transitions between grid view and artwork detail
  *
  * Flow:
- *   1. Fetches the 20 most recent portfolio items with full detail on mount
- *   2. Displays them in the StackedPanels 3D view
- *   3. On panel click: transitions to detail view (scales in, shows artwork info)
- *   4. Close/back button returns to stack or exits the overlay entirely
+ *   1. Fetches portfolio list on mount (most recent first)
+ *   2. Displays artworks as a scrollable grid with lazy SVG thumbnails
+ *   3. On card click: transitions to detail view
+ *   4. Close/back button returns to grid or exits the overlay
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Download, Layers, Network, FileText } from 'lucide-react';
-import StackedPanels from './ui/stacked-panels';
 import { fetchPortfolio, fetchPortfolioItem } from '../api/client';
-import type { PortfolioDetail } from './PortfolioPanel';
+import type { PortfolioDetail, PortfolioItem } from './PortfolioPanel';
+
+// ── Color utilities ───────────────────────────────────────────────────────────
+
+function extractBgColor(svg: string): string | null {
+  // Background rect is typically the first rect with a fill
+  const m = svg.match(/<rect[^>]+fill="(#[0-9a-fA-F]{3,8}|[a-z]+)"[^>]*>/i);
+  return m?.[1] ?? null;
+}
+
+function hexToHsl(hex: string): [number, number, number] {
+  let r = 0, g = 0, b = 0;
+  if (hex.length === 4) {
+    r = parseInt(hex[1] + hex[1], 16);
+    g = parseInt(hex[2] + hex[2], 16);
+    b = parseInt(hex[3] + hex[3], 16);
+  } else if (hex.length >= 7) {
+    r = parseInt(hex.slice(1, 3), 16);
+    g = parseInt(hex.slice(3, 5), 16);
+    b = parseInt(hex.slice(5, 7), 16);
+  }
+  r /= 255; g /= 255; b /= 255;
+  const max = Math.max(r, g, b), min = Math.min(r, g, b);
+  const l = (max + min) / 2;
+  if (max === min) return [0, 0, l];
+  const d = max - min;
+  const s = d / (l > 0.5 ? 2 - max - min : max + min);
+  let h = 0;
+  if (max === r) h = ((g - b) / d + (g < b ? 6 : 0)) / 6;
+  else if (max === g) h = ((b - r) / d + 2) / 6;
+  else h = ((r - g) / d + 4) / 6;
+  return [h * 360, s, l];
+}
 
 interface PortfolioStackViewProps {
   onClose: () => void;
@@ -24,24 +55,47 @@ interface PortfolioStackViewProps {
 }
 
 export function PortfolioStackView({ onClose, onNodeSelect }: PortfolioStackViewProps) {
-  const [items, setItems] = useState<PortfolioDetail[]>([]);
+  const [items, setItems] = useState<PortfolioItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedDetail, setSelectedDetail] = useState<PortfolioDetail | null>(null);
+  const [colorMap, setColorMap] = useState<Record<string, string>>({});
+  const [sortMode, setSortMode] = useState<'recent' | 'similarity'>('recent');
+  const [activeColor, setActiveColor] = useState<string | null>(null);
 
   useEffect(() => {
     fetchPortfolio()
-      .then(async list => {
-        const ordered = [...list].sort((a, b) =>
-          new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-        );
-        const details = await Promise.all(
-          ordered.map(item => fetchPortfolioItem(item.artwork_id).catch(() => null)),
-        );
-        setItems(details.filter((d): d is PortfolioDetail => d !== null));
-      })
+      .then(list => setItems([...list].reverse()))
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
+
+  const handleColorExtracted = useCallback((id: string, color: string) => {
+    setColorMap(prev => prev[id] === color ? prev : { ...prev, [id]: color });
+  }, []);
+
+  const uniqueColors = useMemo(
+    () => [...new Set(Object.values(colorMap))],
+    [colorMap],
+  );
+
+  const displayItems = useMemo(() => {
+    let list = activeColor
+      ? items.filter(item => colorMap[item.artwork_id] === activeColor)
+      : [...items];
+    if (sortMode === 'similarity') {
+      list.sort((a, b) => {
+        const [ha] = hexToHsl(colorMap[a.artwork_id] ?? '#000');
+        const [hb] = hexToHsl(colorMap[b.artwork_id] ?? '#000');
+        return ha - hb;
+      });
+    }
+    return list;
+  }, [items, colorMap, sortMode, activeColor]);
+
+  const handleCardClick = async (artworkId: string) => {
+    const detail = await fetchPortfolioItem(artworkId).catch(() => null);
+    if (detail) setSelectedDetail(detail);
+  };
 
   const inDetail = selectedDetail !== null;
 
@@ -55,64 +109,129 @@ export function PortfolioStackView({ onClose, onNodeSelect }: PortfolioStackView
         position: 'fixed',
         inset: 0,
         zIndex: 1000,
-        background: 'rgba(255, 255, 255, 0.28)',
-        backdropFilter: 'blur(9px)',
-        WebkitBackdropFilter: 'blur(9px)',
+        background: 'rgba(0,0,0,0.15)',
+        backdropFilter: 'blur(24px)',
+        WebkitBackdropFilter: 'blur(24px)',
+        display: 'flex',
+        flexDirection: 'column',
       }}
     >
-      <style>{`@keyframes ping { 75%,100% { transform: scale(2); opacity: 0; } }`}</style>
-      {/* Back / Close button */}
-      <button
-        onClick={inDetail ? () => setSelectedDetail(null) : onClose}
-        style={{
-          position: 'fixed',
-          top: 20,
-          right: 20,
-          zIndex: 1100,
-          background: 'rgba(255,255,255,0.05)',
-          border: '1px solid rgba(255,255,255,0.1)',
-          borderRadius: 8,
-          color: '#94a3b8',
-          fontSize: 12,
-          fontFamily: "'SF Mono', ui-monospace, monospace",
-          cursor: 'pointer',
-          padding: '6px 14px',
-          transition: 'border-color 0.15s, color 0.15s',
-        }}
-        onMouseEnter={e => {
-          e.currentTarget.style.borderColor = 'rgba(255,255,255,0.25)';
-          e.currentTarget.style.color = '#e2e8f0';
-        }}
-        onMouseLeave={e => {
-          e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)';
-          e.currentTarget.style.color = '#94a3b8';
-        }}
-      >
-        {inDetail ? '← Back' : '× Close'}
-      </button>
+      <style>{`
+        @keyframes ping { 75%,100% { transform: scale(2); opacity: 0; } }
+        .grid-thumb svg { width: 100%; height: 100%; display: block; }
+      `}</style>
 
+      {/* Header bar */}
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: '18px 28px',
+        borderBottom: '1px solid rgba(255,255,255,0.07)',
+        flexShrink: 0,
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+          {inDetail && (
+            <button
+              onClick={() => setSelectedDetail(null)}
+              style={{
+                background: 'none',
+                border: '1px solid rgba(255,255,255,0.12)',
+                borderRadius: 6,
+                color: '#94a3b8',
+                fontSize: 12,
+                fontFamily: "'SF Mono', ui-monospace, monospace",
+                cursor: 'pointer',
+                padding: '4px 12px',
+                marginRight: 4,
+              }}
+            >
+              ← Back
+            </button>
+          )}
+          <span style={{
+            color: '#e2e8f0',
+            fontFamily: "'SF Mono', ui-monospace, monospace",
+            fontSize: 13,
+            fontWeight: 700,
+            letterSpacing: '0.06em',
+          }}>
+            PORTFOLIO
+          </span>
+          {!inDetail && !loading && items.length > 0 && (
+            <span style={{
+              color: '#475569',
+              fontFamily: "'SF Mono', ui-monospace, monospace",
+              fontSize: 11,
+            }}>
+              {items.length} artwork{items.length !== 1 ? 's' : ''}
+            </span>
+          )}
+        </div>
+
+        <button
+          onClick={onClose}
+          style={{
+            background: 'rgba(255,255,255,0.04)',
+            border: '1px solid rgba(255,255,255,0.1)',
+            borderRadius: 8,
+            color: '#94a3b8',
+            fontSize: 12,
+            fontFamily: "'SF Mono', ui-monospace, monospace",
+            cursor: 'pointer',
+            padding: '5px 14px',
+            transition: 'border-color 0.15s, color 0.15s',
+          }}
+          onMouseEnter={e => {
+            e.currentTarget.style.borderColor = 'rgba(255,255,255,0.25)';
+            e.currentTarget.style.color = '#e2e8f0';
+          }}
+          onMouseLeave={e => {
+            e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)';
+            e.currentTarget.style.color = '#94a3b8';
+          }}
+        >
+          × Close
+        </button>
+      </div>
+
+      {/* Filter bar — hidden in detail view */}
+      {!inDetail && !loading && items.length > 0 && (
+        <FilterBar
+          uniqueColors={uniqueColors}
+          activeColor={activeColor}
+          sortMode={sortMode}
+          onColorSelect={(c: string) => setActiveColor(prev => prev === c ? null : c)}
+          onSortChange={setSortMode}
+        />
+      )}
+
+      {/* Body */}
       <AnimatePresence mode="wait">
         {!inDetail ? (
           <motion.div
-            key="stack"
+            key="grid"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
             exit={{ opacity: 0, scale: 0.97 }}
             transition={{ duration: 0.18 }}
-            style={{ width: '100%', height: '100%' }}
+            style={{ flex: 1, overflowY: 'auto', padding: 28 }}
           >
             {loading ? (
               <div style={{
-                width: '100%', height: '100%',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                color: '#475569', fontFamily: "'SF Mono', ui-monospace, monospace", fontSize: 13,
+                height: 200,
+                color: '#475569',
+                fontFamily: "'SF Mono', ui-monospace, monospace",
+                fontSize: 13,
               }}>
                 Loading…
               </div>
             ) : items.length === 0 ? (
               <div style={{
-                width: '100%', height: '100%',
                 display: 'flex', flexDirection: 'column',
                 alignItems: 'center', justifyContent: 'center',
-                gap: 12, opacity: 0.5,
+                height: 200, gap: 12, opacity: 0.5,
               }}>
                 <div style={{ fontSize: 32, color: '#475569' }}>◎</div>
                 <div style={{ color: '#475569', fontFamily: "'SF Mono', ui-monospace, monospace", fontSize: 13 }}>
@@ -120,24 +239,36 @@ export function PortfolioStackView({ onClose, onNodeSelect }: PortfolioStackView
                 </div>
               </div>
             ) : (
-              <StackedPanels items={items} onSelect={setSelectedDetail} />
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))',
+                gap: 16,
+              }}>
+                {displayItems.map(item => (
+                  <GridCard
+                    key={item.artwork_id}
+                    item={item}
+                    onClick={() => handleCardClick(item.artwork_id)}
+                    onColorExtracted={handleColorExtracted}
+                  />
+                ))}
+              </div>
             )}
           </motion.div>
         ) : (
-          // Panel expands to fill screen and shows detail
           <motion.div
             key="detail"
-            initial={{ opacity: 0, scale: 0.82 }}
+            initial={{ opacity: 0, scale: 0.94 }}
             animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.82 }}
+            exit={{ opacity: 0, scale: 0.94 }}
             transition={{ type: 'spring', stiffness: 260, damping: 26 }}
             style={{
-              width: '100%',
-              height: '100%',
+              flex: 1,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              padding: 24,
+              padding: 28,
+              overflowY: 'auto',
             }}
           >
             <ArtworkDetailView
@@ -151,7 +282,148 @@ export function PortfolioStackView({ onClose, onNodeSelect }: PortfolioStackView
   );
 }
 
-// ── Artwork detail (shown after panel click) ──────────────────────────────────
+// ── Filter bar ────────────────────────────────────────────────────────────────
+
+function FilterBar({
+  uniqueColors,
+  activeColor,
+  sortMode,
+  onColorSelect,
+  onSortChange,
+}: {
+  uniqueColors: string[];
+  activeColor: string | null;
+  sortMode: 'recent' | 'similarity';
+  onColorSelect: (c: string) => void;
+  onSortChange: (m: 'recent' | 'similarity') => void;
+}) {
+  const btn = (label: string, active: boolean, onClick: () => void) => (
+    <button
+      onClick={onClick}
+      style={{
+        background: active ? 'rgba(99,102,241,0.18)' : 'rgba(255,255,255,0.04)',
+        border: `1px solid ${active ? 'rgba(99,102,241,0.5)' : 'rgba(255,255,255,0.08)'}`,
+        borderRadius: 6,
+        color: active ? '#c7d2fe' : '#64748b',
+        fontSize: 11,
+        fontFamily: "'SF Mono', ui-monospace, monospace",
+        cursor: 'pointer',
+        padding: '4px 10px',
+        transition: 'all 0.15s',
+      }}
+    >
+      {label}
+    </button>
+  );
+
+  return (
+    <div style={{
+      display: 'flex',
+      alignItems: 'center',
+      gap: 10,
+      padding: '10px 28px',
+      borderBottom: '1px solid rgba(255,255,255,0.06)',
+      flexShrink: 0,
+      flexWrap: 'wrap',
+    }}>
+      {/* Sort section */}
+      <span style={{ color: '#374151', fontSize: 10, fontFamily: "'SF Mono', ui-monospace, monospace", letterSpacing: '0.08em', marginRight: 2 }}>SORT</span>
+      {btn('Recent', sortMode === 'recent', () => onSortChange('recent'))}
+      {btn('Similarity', sortMode === 'similarity', () => onSortChange('similarity'))}
+
+      {uniqueColors.length > 0 && (
+        <>
+          <div style={{ width: 1, height: 16, background: 'rgba(255,255,255,0.08)', margin: '0 4px' }} />
+          <span style={{ color: '#374151', fontSize: 10, fontFamily: "'SF Mono', ui-monospace, monospace", letterSpacing: '0.08em', marginRight: 2 }}>COLOR</span>
+          {uniqueColors.map(color => (
+            <button
+              key={color}
+              onClick={() => onColorSelect(color)}
+              title={color}
+              style={{
+                width: 20,
+                height: 20,
+                borderRadius: '50%',
+                background: color,
+                border: `2px solid ${activeColor === color ? '#ffffff' : 'rgba(255,255,255,0.15)'}`,
+                cursor: 'pointer',
+                padding: 0,
+                flexShrink: 0,
+                boxShadow: activeColor === color ? `0 0 0 2px rgba(255,255,255,0.4)` : 'none',
+                transition: 'border-color 0.15s, box-shadow 0.15s',
+              }}
+            />
+          ))}
+          {activeColor && btn('Clear', false, () => onColorSelect(activeColor))}
+        </>
+      )}
+    </div>
+  );
+}
+
+// ── Grid card ─────────────────────────────────────────────────────────────────
+
+function GridCard({
+  item,
+  onClick,
+  onColorExtracted,
+}: {
+  item: PortfolioItem;
+  onClick: () => void;
+  onColorExtracted?: (id: string, color: string) => void;
+}) {
+  const [svgContent, setSvgContent] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchPortfolioItem(item.artwork_id)
+      .then(d => {
+        setSvgContent(d.svg_content);
+        const color = extractBgColor(d.svg_content);
+        if (color) onColorExtracted?.(item.artwork_id, color);
+      })
+      .catch(() => {});
+  }, [item.artwork_id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        background: 'rgba(255,255,255,0.03)',
+        border: '1px solid rgba(255,255,255,0.07)',
+        borderRadius: 10,
+        overflow: 'hidden',
+        cursor: 'pointer',
+        padding: 0,
+        textAlign: 'left',
+        transition: 'border-color 0.15s, transform 0.12s',
+      }}
+      onMouseEnter={e => {
+        e.currentTarget.style.borderColor = 'rgba(99,102,241,0.5)';
+        e.currentTarget.style.transform = 'translateY(-2px)';
+      }}
+      onMouseLeave={e => {
+        e.currentTarget.style.borderColor = 'rgba(255,255,255,0.07)';
+        e.currentTarget.style.transform = 'translateY(0)';
+      }}
+    >
+      {/* Thumbnail — fixed ratio box, full artwork scaled to fit */}
+      <div style={{
+        position: 'relative',
+        width: '100%',
+        aspectRatio: '1',
+        background: '#000',
+      }}>
+        <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          {svgContent
+            ? <div className="grid-thumb" style={{ width: '100%', height: '100%' }} dangerouslySetInnerHTML={{ __html: svgContent }} />
+            : <div style={{ width: 24, height: 24, borderRadius: '50%', background: 'rgba(255,255,255,0.05)' }} />}
+        </div>
+      </div>
+    </button>
+  );
+}
+
+// ── Artwork detail ────────────────────────────────────────────────────────────
 
 const LABEL_STYLE: React.CSSProperties = {
   color: '#71717a',
@@ -213,12 +485,12 @@ function ArtworkDetailView({
       borderRadius: 24,
       maxWidth: 860,
       width: '100%',
-      maxHeight: '90vh',
+      maxHeight: '80vh',
       overflow: 'hidden',
       display: 'flex',
       flexDirection: 'column',
     }}>
-      {/* Inner glow — top-right ambient */}
+      {/* Ambient glow */}
       <div style={{
         position: 'absolute',
         top: -80, right: -80,
@@ -242,7 +514,6 @@ function ArtworkDetailView({
         zIndex: 1,
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 14, minWidth: 0 }}>
-          {/* Icon container */}
           <div style={{
             width: 40, height: 40,
             borderRadius: 12,
@@ -268,7 +539,6 @@ function ArtworkDetailView({
           </div>
         </div>
 
-        {/* Status pills */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
           <div style={GLASS_PILL}>
             <span style={{ position: 'relative', display: 'inline-flex', width: 7, height: 7 }}>
@@ -284,7 +554,6 @@ function ArtworkDetailView({
             </span>
             ACTIVE
           </div>
-
           <button
             onClick={handleDownload}
             style={{
@@ -345,8 +614,6 @@ function ArtworkDetailView({
           flex: 1, overflowY: 'auto', padding: 24,
           display: 'flex', flexDirection: 'column', gap: 24,
         }}>
-
-          {/* Source nodes */}
           {(detail.voter_ids ?? []).length > 0 && (
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
@@ -390,10 +657,8 @@ function ArtworkDetailView({
             </div>
           )}
 
-          {/* Divider */}
           <div style={{ height: 1, background: 'rgba(255,255,255,0.07)', flexShrink: 0 }} />
 
-          {/* Justification trace */}
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
               <div style={{

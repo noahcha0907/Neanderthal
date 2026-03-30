@@ -24,6 +24,7 @@ export default function App() {
   const [graphTheme, setGraphTheme] = useState<GraphTheme>('dark');
   const [cursor, setCursor] = useState({ x: 0, y: 0 });
   const [camera, setCamera] = useState({ azimuth: 0, elevation: 0 });
+  const [orbitLock, setOrbitLock] = useState(false);
 
   useEffect(() => {
     const onMove = (e: MouseEvent) => setCursor({ x: e.clientX, y: e.clientY });
@@ -198,6 +199,13 @@ export default function App() {
         talentCount={data?.nodes.filter(n => n.kind === 'artwork').length ?? 0}
         cursor={cursor}
         camera={camera}
+        orbitLock={orbitLock}
+        onOrbitLockToggle={() => {
+          const next = !orbitLock;
+          setOrbitLock(next);
+          graphViewRef.current?.setOrbitLock(next);
+        }}
+        onResetView={() => graphViewRef.current?.resetView()}
       />
 
       {/* Portfolio stack overlay */}

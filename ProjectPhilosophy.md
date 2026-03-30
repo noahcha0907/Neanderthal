@@ -97,6 +97,20 @@ The semantic graph is evidence. The justifications are a kind of confession. The
 
 ---
 
+## Data Visualization as a Core Goal
+
+A major goal of this project is to experiment with data visualization — specifically, visualization as an aesthetic object rather than an informational one.
+
+The 3D semantic graph is the clearest expression of this. It is technically a graph database rendered in force-directed 3D space, but the design intent is that it feels like something. The pulsing nodes, the glowing edges, the breathing idle state, the Consciousness Terminal streaming prose in real time — these are not decorations on top of a functional system. They are the argument. A viewer who has never read a line of the codebase should look at the graph and feel that something intelligent is happening inside it.
+
+This is a deliberate use of aesthetic as a form of persuasion. A dense, beautiful, clearly-technical visualization creates an impression of depth and rigor before a single explanation is given. The complexity is real — the graph is a genuine semantic structure, the edges carry real weights, the animations reflect actual computation — but the aesthetic presentation amplifies that complexity into something that reads as authoritative. This is how the best scientific visualization works: it makes real data feel like evidence.
+
+The project takes the position that this is legitimate, and that it is underused in AI research. Most AI systems present their outputs (text, images, audio) but hide their internals. Neanderthal inverts this — the internals are the product. The graph is the robot's mind made into an experience. The goal is for a person watching the robot think to come away with an intuition about what is happening inside it that no amount of written explanation could produce as efficiently.
+
+This extends to the full interface: the atmospheric background shifts during generation, the corpus fog drifting behind the graph, the Manifesto overlay on first visit. Each of these is a visual argument for the project's thesis, delivered through feeling rather than description.
+
+---
+
 ## Future Directions
 
 These are outside the scope of the initial proof of concept but are part of the longer arc of the project:

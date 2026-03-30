@@ -20,6 +20,9 @@ interface Props {
   talentCount: number;
   cursor: { x: number; y: number };
   camera: { azimuth: number; elevation: number };
+  orbitLock: boolean;
+  onOrbitLockToggle: () => void;
+  onResetView: () => void;
 }
 
 // ── Upload Modal ───────────────────────────────────────────────────────────────
@@ -342,7 +345,7 @@ function IsoCubeThemeBtn({
 
 // ── Main component ────────────────────────────────────────────────────────────
 
-export function ToolMenu({ activeTool, onToolChange, isSessionActive, onPlay, onStop, onUpload, onPortfolio, graphTheme, onThemeChange, nodeCount, edgeCount, humanitiesCount, talentCount, cursor, camera }: Props) {
+export function ToolMenu({ activeTool, onToolChange, isSessionActive, onPlay, onStop, onUpload, onPortfolio, graphTheme, onThemeChange, nodeCount, edgeCount, humanitiesCount, talentCount, cursor, camera, orbitLock, onOrbitLockToggle, onResetView }: Props) {
   const isLight = graphTheme === 'light';
   const [isOpen, setIsOpen] = useState(false);
   const [playHovered, setPlayHovered] = useState(false);
@@ -405,6 +408,94 @@ export function ToolMenu({ activeTool, onToolChange, isSessionActive, onPlay, on
             label="Select (v)"
             isLight={isLight}
           />
+        </div>
+
+        {/* ── Camera controls ────────────────────────────────────────── */}
+        <div style={{
+          display: 'flex',
+          gap: 6,
+          padding: '6px 16px 8px',
+          borderBottom: isLight ? '1px solid rgba(0,0,0,0.07)' : '1px solid rgba(255,255,255,0.05)',
+          flexShrink: 0,
+        }}>
+          {/* Orbit lock toggle */}
+          <button
+            onClick={onOrbitLockToggle}
+            title={orbitLock ? 'Unlock orbit' : 'Auto-orbit'}
+            style={{
+              flex: 1,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 6,
+              padding: '7px 0',
+              background: orbitLock
+                ? isLight ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.1)'
+                : 'transparent',
+              border: orbitLock
+                ? isLight ? '1px solid rgba(0,0,0,0.25)' : '1px solid rgba(255,255,255,0.3)'
+                : isLight ? '1px solid rgba(0,0,0,0.1)' : '1px solid rgba(255,255,255,0.08)',
+              borderRadius: 5,
+              color: orbitLock
+                ? isLight ? 'rgba(0,0,0,0.8)' : 'rgba(255,255,255,0.9)'
+                : isLight ? 'rgba(0,0,0,0.4)' : 'rgba(255,255,255,0.4)',
+              fontSize: 10,
+              fontFamily: "'SF Mono', ui-monospace, monospace",
+              fontWeight: 600,
+              letterSpacing: '0.06em',
+              cursor: 'pointer',
+              transition: 'background 0.12s, border-color 0.12s, color 0.12s',
+            }}
+          >
+            {/* Orbit icon — circular arrow */}
+            <svg width="11" height="11" viewBox="0 0 11 11" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round">
+              <path d="M9.5 5.5a4 4 0 1 1-1.17-2.83" />
+              <polyline points="8.5,1.5 8.5,3.5 6.5,3.5" fill="currentColor" stroke="none" />
+              <path d="M8.5 1.5 L8.5 3.5 L6.5 3.5" strokeLinejoin="round" />
+            </svg>
+            Orbit
+          </button>
+          {/* Reset view */}
+          <button
+            onClick={onResetView}
+            title="Reset camera"
+            style={{
+              flex: 1,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 6,
+              padding: '7px 0',
+              background: 'transparent',
+              border: isLight ? '1px solid rgba(0,0,0,0.1)' : '1px solid rgba(255,255,255,0.08)',
+              borderRadius: 5,
+              color: isLight ? 'rgba(0,0,0,0.4)' : 'rgba(255,255,255,0.4)',
+              fontSize: 10,
+              fontFamily: "'SF Mono', ui-monospace, monospace",
+              fontWeight: 600,
+              letterSpacing: '0.06em',
+              cursor: 'pointer',
+              transition: 'background 0.12s, color 0.12s',
+            }}
+            onMouseEnter={e => {
+              e.currentTarget.style.background = isLight ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.07)';
+              e.currentTarget.style.color = isLight ? 'rgba(0,0,0,0.75)' : 'rgba(255,255,255,0.8)';
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.background = 'transparent';
+              e.currentTarget.style.color = isLight ? 'rgba(0,0,0,0.4)' : 'rgba(255,255,255,0.4)';
+            }}
+          >
+            {/* Target/crosshair icon */}
+            <svg width="11" height="11" viewBox="0 0 11 11" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round">
+              <circle cx="5.5" cy="5.5" r="3" />
+              <line x1="5.5" y1="1" x2="5.5" y2="2.5" />
+              <line x1="5.5" y1="8.5" x2="5.5" y2="10" />
+              <line x1="1" y1="5.5" x2="2.5" y2="5.5" />
+              <line x1="8.5" y1="5.5" x2="10" y2="5.5" />
+            </svg>
+            Reset
+          </button>
         </div>
 
         {/* ── Info sections ──────────────────────────────────────────── */}

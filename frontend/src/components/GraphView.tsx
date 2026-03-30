@@ -28,6 +28,8 @@ export interface GraphViewHandle {
   pulseAll(durationMs: number): void;
   animateVoters(voterIds: string[], totalMs: number): void;
   focusNode(nodeId: string): void;
+  setOrbitLock(enabled: boolean): void;
+  resetView(): void;
 }
 
 // ── Shaders ───────────────────────────────────────────────────────────────────
@@ -180,6 +182,11 @@ export const GraphView = forwardRef<GraphViewHandle, Props>(function GraphView(
   useEffect(() => { graphThemeRef.current = graphTheme; }, [graphTheme]);
   const onCameraChangeRef = useRef(onCameraChange);
   useEffect(() => { onCameraChangeRef.current = onCameraChange; }, [onCameraChange]);
+  const controlsRef = useRef<any>(null);
+  const initialCamRef = useRef<{ x: number; y: number; z: number } | null>(null);
+  const orbitActiveRef = useRef(false);
+  const orbitLastTimeRef = useRef<number | null>(null);
+  const orbitRafRef = useRef<number | null>(null);
 
   // ── Tool switch: toggle OrbitControls and cursor ──────────────────────────
   useEffect(() => {
@@ -361,6 +368,52 @@ export const GraphView = forwardRef<GraphViewHandle, Props>(function GraphView(
         800,
       );
     },
+
+    setOrbitLock(enabled: boolean) {
+      orbitActiveRef.current = enabled;
+      if (orbitRafRef.current !== null) {
+        cancelAnimationFrame(orbitRafRef.current);
+        orbitRafRef.current = null;
+      }
+      orbitLastTimeRef.current = null;
+      if (!enabled) return;
+
+      const tick = (timestamp: number) => {
+        if (!orbitActiveRef.current || !graphRef.current) return;
+        const dt = orbitLastTimeRef.current !== null
+          ? Math.min((timestamp - orbitLastTimeRef.current) / 1000, 0.05)
+          : 0;
+        orbitLastTimeRef.current = timestamp;
+
+        if (dt > 0) {
+          const cam = graphRef.current.camera() as THREE.PerspectiveCamera;
+          const controls = controlsRef.current;
+          const tx = controls?.target?.x ?? 0;
+          const ty = controls?.target?.y ?? 0;
+          const tz = controls?.target?.z ?? 0;
+          const angle = 0.7 * dt; // 0.7 rad/s ≈ 40°/s, frame-rate independent
+          const dx = cam.position.x - tx;
+          const dz = cam.position.z - tz;
+          const cos = Math.cos(angle);
+          const sin = Math.sin(angle);
+          const nx = tx + dx * cos + dz * sin;
+          const nz = tz - dx * sin + dz * cos;
+          const azimuth = Math.atan2(nx - tx, nz - tz);
+          const radius = Math.sqrt(dx * dx + dz * dz);
+          cam.position.x = nx;
+          cam.position.z = nz;
+          cam.position.y = ty + Math.sin(azimuth) * radius * 0.12;
+          cam.lookAt(tx, ty, tz);
+        }
+        orbitRafRef.current = requestAnimationFrame(tick);
+      };
+      orbitRafRef.current = requestAnimationFrame(tick);
+    },
+
+    resetView() {
+      if (!graphRef.current || !initialCamRef.current) return;
+      graphRef.current.cameraPosition(initialCamRef.current, { x: 0, y: 0, z: 0 }, 800);
+    },
   }));
 
   // ── Graph mount ───────────────────────────────────────────────────────────
@@ -426,6 +479,7 @@ export const GraphView = forwardRef<GraphViewHandle, Props>(function GraphView(
     // The library's render loop calls controls.update() every frame, so
     // damping works without any custom RAF. We just configure it and let it run.
     const controls = Graph.controls();
+    controlsRef.current = controls;
     controls.enableDamping = true;
     controls.dampingFactor = 0.08;   // lower = more inertia / smoother coast
     controls.rotateSpeed = 0.6;
@@ -557,6 +611,8 @@ export const GraphView = forwardRef<GraphViewHandle, Props>(function GraphView(
       Graph._destructor?.();
       if (syncRafRef.current)   cancelAnimationFrame(syncRafRef.current);
       if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
+      orbitActiveRef.current = false;
+      if (orbitRafRef.current !== null) cancelAnimationFrame(orbitRafRef.current);
       controls.removeEventListener('change', onControlsChange);
       tooltip.remove();
       containerRef.current?.removeEventListener('mousedown', onMouseDown);
@@ -596,6 +652,11 @@ export const GraphView = forwardRef<GraphViewHandle, Props>(function GraphView(
       simRunningRef.current = false;
       Graph.linkVisibility(true);
       Graph.linkDirectionalParticles((link: any) => link.__kind === 'influence' ? 2 : 0);
+      // Capture initial camera position once so resetView can return here
+      if (!initialCamRef.current) {
+        const cam = Graph.camera() as THREE.PerspectiveCamera;
+        initialCamRef.current = { x: cam.position.x, y: cam.position.y, z: cam.position.z };
+      }
       onSettledRef.current?.();
     });
   }, [graphData]); // eslint-disable-line react-hooks/exhaustive-deps
